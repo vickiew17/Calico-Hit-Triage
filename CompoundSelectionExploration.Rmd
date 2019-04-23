@@ -1,0 +1,77 @@
+---
+title: "Hit Triage Compound Selection Exploration"
+author: "Vickie"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+  html_notebook:
+    theme: spacelab
+    toc: yes
+    toc_float: yes
+editor_options:
+  chunk_output_type: console
+---
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 7)
+```
+
+```{r, include = FALSE}
+### Import libraries
+library(readxl)
+library(useful)
+library(taigr)
+library(magrittr)
+library(tidyverse)
+library(glmnet)
+library(ranger)
+library(pheatmap)
+library(RColorBrewer)
+library(prismr)
+library(piano)
+library(cdsr)
+library(ggthemes)
+library(scales)
+library(GSEABase)
+library(hrbrthemes)
+library(plotly)
+library(ggrepel)
+library(gridExtra)
+library(cowplot)
+library(rapportools)
+library(devtools)
+library(edgeR)
+library(matrixStats)
+library(ggtech)
+library(gg3D)
+#library(Rtsne)
+#library(umap)
+library(WGCNA)
+library(plyr)
+library(dplyr)
+library(ggpubr)
+```
+
+```{r, include = FALSE}
+CCLE.depMap.19Q2.TPM <- load.from.taiga(data.name='depmap-rnaseq-expression-data-363a', data.version=16, data.file='CCLE_depMap_19Q2_TPM')
+T3B.LEVEL5.MODZ <- load.from.taiga(data.name='calico-data-f434', data.version=5, data.file='T3B_LEVEL5_MODZ')
+```
+
+```{r}
+rownames(CCLE.depMap.19Q2.TPM) <- celllinemapr::arxspan.to.ccle(rownames(CCLE.depMap.19Q2.TPM))
+celllines <- intersect(rownames(CCLE.depMap.19Q2.TPM),colnames(T3B.LEVEL5.MODZ))
+
+cpdprofs <- T3B.LEVEL5.MODZ %>% dplyr::filter(pert_iname != "DMSO", pert_type == "trt_cp") %>% dplyr::select(group_by,celllines) %>% column_to_rownames(var = "group_by")
+expression <- CCLE.depMap.19Q2.TPM[celllines,]
+```
+
+
+
+```{r}
+dplyr::select(T3B.LEVEL5.MODZ,-blah) %>% dplyr::filter(pert_iname != "DMSO") %>% View
+all.equal(list(rownames(expression)),list(colnames(cpdprofs)))
+```
+
