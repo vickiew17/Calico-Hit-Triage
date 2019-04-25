@@ -68,9 +68,73 @@ cpdprofs <- T3B.LEVEL5.MODZ %>% dplyr::filter(pert_iname != "DMSO", pert_type ==
 expression <- CCLE.depMap.19Q2.TPM[celllines,]
 ```
 
+```{r}
+corandpvalues <- WGCNA::corAndPvalue(t(cpdprofs),expression, use = "pairwise.complete.obs")
+```
+
+```{r}
+corr <- corandpvalues$cor
+cpds <- rownames(corr)
+corrtops <- data.frame(matrix(ncol = length(cpds), nrow = 8)) %>% set_colnames(cpds)
+#corrtops <- NULL
+# corrtop2$maxpos <- NULL
+# corrtop2$maxneg <- NULL
+# corrtop2$smaxpos <- NULL
+# corrtop2$smaxneg <- NULL
+# corrtop2$maxposgene <- NULL
+# corrtop2$maxneggene <- NULL
+# corrtop2$smaxposgene <- NULL
+# corrtop2$smaxneggene <- NULL
+#cpd <- cpds[1]
+for(cpd in cpds) {
+    corrcpd <- sort(corr[cpd,])
+    genes <- names(corrcpd)
+    n <- length(genes)
+    corrtops[[cpd]] <- c(corrcpd[1],genes[1],corrcpd[2],genes[2],corrcpd[n-1],genes[n-1],corrcpd[n],genes[n])
+}
+```
+
+```{r}
+corrtops %<>% t %>% set_colnames(c("maxneg","maxneggene","smaxneg","smaxneggene","smaxpos","smaxposgene","maxpos","maxposgene")) %>% as.data.frame() %>% rownames_to_column(var = "treatment")
+#write_csv(corrtops,"T3B_topcorrs.csv")
+```
+
+```{r}
+corrtops <- data.table::fread("T3B_topcorrs.csv") %>% as.data.frame
+corrtops %<>% dplyr::mutate(diffneg = smaxneg - maxneg, diffpos = maxpos - smaxpos)
+
+corrtops %<>% dplyr::mutate(treatment = word(treatment,1,2, sep = fixed(":")))
+
+ggplot(corrtops) + geom_histogram(aes(x=pmax(diffpos,diffneg)))
+
+#write_csv(corrtops,"T3B_corrdelta.csv")
+```
+
+
+
 
 
 ```{r}
+T2A.LEVEL5.MODZ <- load.from.taiga(data.name='calico-data-f434', data.version=5, data.file='T2A_LEVEL5_MODZ')
+T2B.LEVEL5.MODZ <- load.from.taiga(data.name='calico-data-f434', data.version=5, data.file='T2B_LEVEL5_MODZ')
+potentiallitmus <- T2A.LEVEL5.MODZ %>% dplyr::select(-celllines) %>% dplyr::filter(pert_iname != pert_id)
+
+
+T2A.LEVEL5.MODZ %>% dplyr::select(-celllines) %>% dplyr::filter(pert_iname != pert_id) %>% dplyr::select(mfc_plate_name) %>% count
+```
+
+
+
+```{r, eval = FALSE}
+toycpd <- head(cpdprofs)
+toyexpr <- expression[,1:10]
+
+asdf <- WGCNA::corAndPvalue(t(toycpd),toyexpr, use = "pairwise.complete.obs")
+```
+
+
+
+```{r, eval = FALSE}
 dplyr::select(T3B.LEVEL5.MODZ,-blah) %>% dplyr::filter(pert_iname != "DMSO") %>% View
 all.equal(list(rownames(expression)),list(colnames(cpdprofs)))
 ```
